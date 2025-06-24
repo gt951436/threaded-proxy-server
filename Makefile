@@ -1,15 +1,28 @@
-CC=g++
-CFLAGS= -g -Wall 
+# Makefile for proxy server (Windows/Linux compatible)
+CC      := gcc
+CFLAGS  := -g -Wall
+LDFLAGS := -lpthread
 
-all: proxy
+# Windows-specific settings
+ifeq ($(OS),Windows_NT)
+    LDFLAGS += -lws2_32
+    TARGET  := proxy.exe
+else
+    TARGET  := proxy
+endif
 
-proxy: proxy_server_with_cache.c
-	$(CC) $(CFLAGS) -o proxy_parse.o -c proxy_parse.c -lpthread
-	$(CC) $(CFLAGS) -o proxy.o -c proxy_server_with_cache.c -lpthread
-	$(CC) $(CFLAGS) -o proxy proxy_parse.o proxy.o -lpthread
+SRCS    := proxyServerWithCache.c proxy_parse.c
+OBJS    := $(SRCS:.c=.o)
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) $(LDFLAGS) -o $(TARGET)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f proxy *.o
-
-tar:
-	tar -cvzf ass1.tgz proxy_server_with_cache.c README Makefile proxy_parse.c proxy_parse.h
+	rm -f $(OBJS) $(TARGET)
